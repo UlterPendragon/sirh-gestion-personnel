@@ -40,7 +40,7 @@ public class EditerCollaborateurController extends HttpServlet {
 			+ " Titre = " + paramTitre
 			+ " Nom = " + paramNom
 			+ " Prénom = " + paramPrenom);	
-			
+			//pas pu finir
 		}
 	}
 }
