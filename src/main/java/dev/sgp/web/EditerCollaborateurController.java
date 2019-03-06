@@ -1,46 +1,79 @@
 package dev.sgp.web;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-public class EditerCollaborateurController extends HttpServlet {
+import dev.sgp.entite.Collaborateur;
+import dev.sgp.service.CollaborateurService;
+import dev.sgp.util.Constantes;
 
+public class EditerCollaborateurController extends HttpServlet {
+	
+	private CollaborateurService collabService = Constantes.COLLAB_SERVICE;
+			
+	
+	
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws
 	ServletException, IOException {
 
 		// recupere la valeur d'un parametre dont le nom collaborateurs/editer
-		String paramMatricule = req.getParameter("matricule");
-		if (paramMatricule == null){
-			resp.sendError(400, "Un matricule est attendu");
-		} else {
-			resp.setContentType("text/html");
-
-			// code HTML ecrit dans le corps de la reponse
-			resp.getWriter().write("<h1>Edition de collaborateur</h1>" + "Matricule = "  + paramMatricule);		
+		req.getRequestDispatcher("/WEB-INF/views/collab/newCollaborateurForm.jsp").forward(req, resp);
 		}
-	}
+		
+	
 	
 	public void doPost(HttpServletRequest req, HttpServletResponse rep)	throws ServletException, IOException {
 			// phase de traitement des requêtes POST
 		
-		String paramMatricule = req.getParameter("matricule");
-		String paramTitre = req.getParameter("titre");
 		String paramNom = req.getParameter("nom");
 		String paramPrenom = req.getParameter("prenom");
-		if (paramMatricule == null || paramTitre == null || paramNom == null || paramPrenom == null){
-			rep.sendError(400, "Les paramètres suivants sont incorrects : ");
-		} else {
+		String paramBirthDate = req.getParameter("birthdate");
+		String paramAdresse = req.getParameter("adresse");
+		String paramNumSecuSociale = req.getParameter("numSecuSociale");
+		
 			rep.setContentType("text/html");
 			rep.getWriter().write("<h1>Creation d’un collaborateur avec les informations suivantes :</h1>"
-			+ "Matricule = "  + paramMatricule 
-			+ " Titre = " + paramTitre
-			+ " Nom = " + paramNom
-			+ " Prénom = " + paramPrenom);	
-			//pas pu finir
-		}
-	}
-}
+			+ " Nom = "  + paramNom 
+			+ " Prénom = " + paramPrenom
+			+ " Date de Naissance = " + paramBirthDate
+			+ " Adresse = " + paramAdresse
+			+ " Numéro de Sécurité Sociale = " + paramNumSecuSociale);
+			
+		
+			LocalDate dateNaissance = LocalDate.parse(paramBirthDate);
+			
+			String emailPro = (paramNom + paramPrenom + "@societe.com");
+			
+			String initialePrenom = paramPrenom.substring(0,1);
+			String initialeNom = paramNom.substring(0,1);
+			String matricule = (initialePrenom + initialeNom + paramBirthDate );
+			
+			Instant maintenant = Instant.now();
+			LocalDateTime maintenantIci = LocalDateTime.ofInstant(maintenant, ZoneId.systemDefault());
+			ZonedDateTime dateHeure = maintenant.atZone(ZoneId.of("Europe/Paris"));
+			
+			String photo = "http://placekitten.com/200/200";
+					 
+			
+			Collaborateur creationCollaborateur = new Collaborateur(matricule, paramNom, paramPrenom, dateNaissance, paramAdresse,
+			paramNumSecuSociale, emailPro, photo, dateHeure, true);
+			
+			collabService.sauvegarderCollaborateur(creationCollaborateur);
+			
+			rep.sendRedirect("/sgp/collaborateurs/lister");
+		}	
+		
+	}	
+
+
+	
